@@ -6,6 +6,7 @@ namespace CheckpointBlock
     using System.Reflection;
     using System.Xml;
     using System.Xml.Linq;
+    using CheckpointBlock.Behaviours;
     using CheckpointBlock.Blocks;
     using CheckpointBlock.Entities;
     using CheckpointBlock.Factories;
@@ -17,7 +18,6 @@ namespace CheckpointBlock
     using JumpKing.SaveThread;
     using Microsoft.Xna.Framework;
     using Microsoft.Xna.Framework.Graphics;
-    using MomentumStopBlock.Behaviours;
 
     [JumpKingMod("Zebra.CheckpointBlock")]
     public static class ModEntry

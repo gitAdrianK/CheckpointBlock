@@ -1,4 +1,4 @@
-namespace MomentumStopBlock.Behaviours
+namespace CheckpointBlock.Behaviours
 {
     using System.Linq;
     using CheckpointBlock.Blocks;

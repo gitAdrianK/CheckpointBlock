@@ -1,4 +1,4 @@
-namespace MomentumStopBlock.Behaviours
+namespace CheckpointBlock.Behaviours
 {
     using CheckpointBlock.Blocks;
     using CheckpointBlock.Entities;
