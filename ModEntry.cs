@@ -116,23 +116,16 @@ namespace CheckpointBlock
             _ = player.m_body.RegisterBlockBehaviour(typeof(BlockCheckpoint), new BehaviourCheckpoint(EntityFlag));
             _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset), new BehaviourReset(EntityFlag));
 
-            var entities = new List<Entity>();
-            var playerFound = false;
-            foreach (var entity in entityManager.Entities)
+            var entities = entityManager.Entities
+                .SkipWhile(e => e != player)
+                .ToList();
+            entities.ForEach(entity =>
             {
-                if (entity == player)
+                if (!(entity is EntityFlag))
                 {
-                    playerFound = true;
+                    entity.GoToFront();
                 }
-                if (playerFound && !(entity is EntityFlag))
-                {
-                    entities.Add(entity);
-                }
-            }
-            foreach (var entity in entities)
-            {
-                entityManager.MoveToFront(entity);
-            }
+            });
         }
 
         [OnLevelEnd]
