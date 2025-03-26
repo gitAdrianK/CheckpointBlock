@@ -52,7 +52,8 @@ namespace CheckpointBlock.Behaviours
             this.HasSet = true;
 
             var rect = advCollisionInfo.GetCollidedBlocks<BlockCheckpoint>().First().GetRect();
-            this.EntityFlag.CurrentPosition = new Point(rect.Left + (rect.Width / 2), rect.Bottom);
+            ModEntry.CurrentPosition = new Point(rect.Left + (rect.Width / 2), rect.Bottom);
+            this.EntityFlag.FlagPosition = ModEntry.CurrentPosition;
 
             return true;
         }

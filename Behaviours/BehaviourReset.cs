@@ -1,7 +1,6 @@
 namespace CheckpointBlock.Behaviours
 {
     using CheckpointBlock.Blocks;
-    using CheckpointBlock.Entities;
     using JumpKing;
     using JumpKing.API;
     using JumpKing.BodyCompBehaviours;
@@ -14,9 +13,9 @@ namespace CheckpointBlock.Behaviours
 
         public bool IsPlayerOnBlock { get; set; }
 
-        private EntityFlag EntityFlag { get; set; }
+        private Point Start { get; }
 
-        public BehaviourReset(EntityFlag entityFlag) => this.EntityFlag = entityFlag;
+        public BehaviourReset(Point start) => this.Start = start;
 
         public float ModifyXVelocity(float inputXVelocity, BehaviourContext behaviourContext) => inputXVelocity;
 
@@ -38,14 +37,15 @@ namespace CheckpointBlock.Behaviours
             var advCollisionInfo = behaviourContext.CollisionInfo.PreResolutionCollisionInfo;
             this.IsPlayerOnBlock = advCollisionInfo.IsCollidingWith<BlockReset>();
 
-            if (!this.IsPlayerOnBlock)
+            if (!this.IsPlayerOnBlock
+                || (ModEntry.IgnoreStart && this.Start == ModEntry.CurrentPosition))
             {
                 return true;
             }
 
             var bodyComp = behaviourContext.BodyComp;
-            bodyComp.Position.X = this.EntityFlag.CurrentPosition.X - (bodyComp.GetHitbox().Width / 2.0f);
-            bodyComp.Position.Y = this.EntityFlag.CurrentPosition.Y - bodyComp.GetHitbox().Height;
+            bodyComp.Position.X = ModEntry.CurrentPosition.X - (bodyComp.GetHitbox().Width / 2.0f);
+            bodyComp.Position.Y = ModEntry.CurrentPosition.Y - bodyComp.GetHitbox().Height;
             bodyComp.Velocity = Vector2.Zero;
             Camera.UpdateCamera(bodyComp.Position.ToPoint());
 

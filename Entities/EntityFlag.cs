@@ -11,19 +11,19 @@ namespace CheckpointBlock.Entities
         private Texture2D Texture { get; set; }
         private Point Start { get; set; }
 
-        public Point CurrentPosition
+        public Point FlagPosition
         {
-            get => this._currentPosition;
+            get => this._flagPosition;
             set
             {
-                this._currentPosition = value;
+                this._flagPosition = value;
                 // Assuming the position is only set by touching the block,
                 // and as such the current screen in the active screen.
                 this.CurrentScreen = Camera.CurrentScreen;
             }
         }
         [SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Field attributes are experimental.")]
-        private Point _currentPosition;
+        private Point _flagPosition;
 
         private int CurrentScreen { get; set; }
 
@@ -31,18 +31,18 @@ namespace CheckpointBlock.Entities
         {
             this.Texture = texture;
             this.Start = start;
-            this.CurrentPosition = start;
+            this.FlagPosition = start;
         }
 
         public override void Draw()
         {
             if (this.CurrentScreen != Camera.CurrentScreen
-                || this.Start == this.CurrentPosition)
+                || this.Start == this.FlagPosition)
             {
                 return;
             }
 
-            var currentPosition = this.CurrentPosition;
+            var currentPosition = this.FlagPosition;
             currentPosition.Y += Camera.CurrentScreen * 360;
             currentPosition += Camera.Offset.ToPoint();
 

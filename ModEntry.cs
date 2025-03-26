@@ -26,6 +26,8 @@ namespace CheckpointBlock
         private static Dictionary<ulong, Point> Checkpoints { get; set; }
         private static Texture2D CheckpointTexture { get; set; }
         private static EntityFlag EntityFlag { get; set; }
+        public static Point CurrentPosition { get; set; }
+        public static bool IgnoreStart { get; set; }
 
         /// <summary>
         /// Called by Jump King before the level loads
@@ -74,8 +76,9 @@ namespace CheckpointBlock
         public static void OnLevelStart()
         {
             var contentManager = Game1.instance.contentManager;
-            if (contentManager.level == null
-                || contentManager.level.ID != FactoryCheckpoint.LastUsedMapId)
+            var level = contentManager.level;
+            if (level == null
+                || level.ID != FactoryCheckpoint.LastUsedMapId)
             {
                 return;
             }
@@ -86,6 +89,16 @@ namespace CheckpointBlock
             if (player == null)
             {
                 return;
+            }
+
+            IgnoreStart = false;
+            foreach (var tag in level.Info.Tags)
+            {
+                if (tag == "CheckpointsIgnoreStart")
+                {
+                    IgnoreStart = true;
+                    break;
+                }
             }
 
             var customPath = Path.Combine(contentManager.level.Root, "checkpoint");
@@ -99,22 +112,23 @@ namespace CheckpointBlock
                 checkpointTexture = CheckpointTexture;
             }
 
-            var position = new Point(231, 302);
+            var startPosition = new Point(231, 302);
             var startData = contentManager.level.Info.About.StartData;
             if (startData.HasValue && startData.Value.Position.HasValue)
             {
-                position = startData.Value.Position.Value.ToPoint();
+                startPosition = startData.Value.Position.Value.ToPoint();
             }
 
-            EntityFlag = new EntityFlag(checkpointTexture, position);
-
-            if (!SaveManager.instance.IsNewGame && Checkpoints.TryGetValue(contentManager.level.ID, out var value))
-            {
-                EntityFlag.CurrentPosition = value;
-            }
-
+            EntityFlag = new EntityFlag(checkpointTexture, startPosition);
+            _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset), new BehaviourReset(startPosition));
             _ = player.m_body.RegisterBlockBehaviour(typeof(BlockCheckpoint), new BehaviourCheckpoint(EntityFlag));
-            _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset), new BehaviourReset(EntityFlag));
+
+            CurrentPosition = startPosition;
+            if (!SaveManager.instance.IsNewGame && Checkpoints.TryGetValue(level.ID, out var value))
+            {
+                CurrentPosition = value;
+                EntityFlag.FlagPosition = value;
+            }
 
             var entities = entityManager.Entities
                 .SkipWhile(e => e != player)
@@ -138,7 +152,7 @@ namespace CheckpointBlock
                 return;
             }
 
-            Checkpoints[contentManager.level.ID] = EntityFlag.CurrentPosition;
+            Checkpoints[contentManager.level.ID] = EntityFlag.FlagPosition;
 
             XmlWriter writer = null;
             try
