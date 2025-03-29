@@ -4,7 +4,6 @@ namespace CheckpointBlock
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Xml;
     using System.Xml.Linq;
     using CheckpointBlock.Behaviours;
     using CheckpointBlock.Blocks;
@@ -24,9 +23,13 @@ namespace CheckpointBlock
     {
         private static string XmlFile { get; set; }
         private static Dictionary<ulong, Point> Checkpoints { get; set; }
+        private static Dictionary<ulong, Point> Checkpoints2 { get; set; }
         private static Texture2D CheckpointTexture { get; set; }
+        private static Texture2D CheckpointTexture2 { get; set; }
         private static EntityFlag EntityFlag { get; set; }
+        private static EntityFlag EntityFlag2 { get; set; }
         public static Point CurrentPosition { get; set; }
+        public static Point CurrentPosition2 { get; set; }
         public static bool IgnoreStart { get; set; }
 
         /// <summary>
@@ -41,25 +44,42 @@ namespace CheckpointBlock
 
             XmlFile = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "checkpoints.sav");
             Checkpoints = new Dictionary<ulong, Point>();
+            Checkpoints2 = new Dictionary<ulong, Point>();
             if (File.Exists(XmlFile))
             {
-                XmlReader reader = null;
-                try
+                using (var fs = new FileStream(XmlFile, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    reader = XmlReader.Create(XmlFile);
-                    var root = XElement.Load(reader);
+                    var doc = XDocument.Load(fs);
+                    var root = doc.Root;
                     foreach (var element in root.Elements())
                     {
-                        var split = element.Value.Split(' ');
-                        Checkpoints.Add(
-                            ulong.Parse(new string(element.Name.LocalName.Skip(2).ToArray())),
-                            new Point(int.Parse(split[0]), int.Parse(split[1])));
+                        if (element.HasElements)
+                        {
+                            var key = ulong.Parse(element.Name.LocalName.Skip(2).ToString());
+                            XElement xel;
+                            if ((xel = element.Element("_set1")) != null)
+                            {
+                                var split = xel.Value.Split(' ');
+                                Checkpoints.Add(
+                                    key,
+                                    new Point(int.Parse(split[0]), int.Parse(split[1])));
+                            }
+                            if ((xel = element.Element("_set2")) != null)
+                            {
+                                var split = xel.Value.Split(' ');
+                                Checkpoints2.Add(
+                                    key,
+                                    new Point(int.Parse(split[0]), int.Parse(split[1])));
+                            }
+                        }
+                        else
+                        {
+                            var split = element.Value.Split(' ');
+                            Checkpoints.Add(
+                                ulong.Parse(new string(element.Name.LocalName.Skip(2).ToArray())),
+                                new Point(int.Parse(split[0]), int.Parse(split[1])));
+                        }
                     }
-                }
-                finally
-                {
-                    reader?.Close();
-                    reader?.Dispose();
                 }
             }
 
@@ -67,6 +87,8 @@ namespace CheckpointBlock
             // The path doesn't exist only when you removed the file. Won't check.
             CheckpointTexture = contentManager.Load<Texture2D>(
                 Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "checkpoint"));
+            CheckpointTexture2 = contentManager.Load<Texture2D>(
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "checkpoint2"));
         }
 
         /// <summary>
@@ -112,6 +134,17 @@ namespace CheckpointBlock
                 checkpointTexture = CheckpointTexture;
             }
 
+            var customPath2 = Path.Combine(contentManager.level.Root, "checkpoint2");
+            Texture2D checkpointTexture2;
+            if (File.Exists(customPath2 + ".xnb"))
+            {
+                checkpointTexture2 = contentManager.Load<Texture2D>(customPath);
+            }
+            else
+            {
+                checkpointTexture2 = CheckpointTexture2;
+            }
+
             var startPosition = new Point(231, 302);
             var startData = contentManager.level.Info.About.StartData;
             if (startData.HasValue && startData.Value.Position.HasValue)
@@ -119,15 +152,30 @@ namespace CheckpointBlock
                 startPosition = startData.Value.Position.Value.ToPoint();
             }
 
-            EntityFlag = new EntityFlag(checkpointTexture, startPosition);
-            _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset), new BehaviourReset(startPosition));
-            _ = player.m_body.RegisterBlockBehaviour(typeof(BlockCheckpoint), new BehaviourCheckpoint(EntityFlag));
+            EntityFlag = null;
+            if (level.ID == FactoryCheckpoint.LastUsedMapIdSet1)
+            {
+                EntityFlag = new EntityFlag(checkpointTexture, startPosition);
+                _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset), new BehaviourReset(startPosition));
+                _ = player.m_body.RegisterBlockBehaviour(typeof(BlockCheckpoint), new BehaviourCheckpoint(EntityFlag));
+            }
+
+            EntityFlag2 = null;
+            if (level.ID == FactoryCheckpoint.LastUsedMapIdSet2)
+            {
+                EntityFlag2 = new EntityFlag(checkpointTexture2, startPosition);
+                _ = player.m_body.RegisterBlockBehaviour(typeof(BlockReset2), new BehaviourReset2(startPosition));
+                _ = player.m_body.RegisterBlockBehaviour(typeof(BlockCheckpoint2), new BehaviourCheckpoint2(EntityFlag2));
+            }
 
             CurrentPosition = startPosition;
+            CurrentPosition2 = startPosition;
             if (!SaveManager.instance.IsNewGame && Checkpoints.TryGetValue(level.ID, out var value))
             {
                 CurrentPosition = value;
+                CurrentPosition2 = value;
                 EntityFlag.FlagPosition = value;
+                EntityFlag2.FlagPosition = value;
             }
 
             var entities = entityManager.Entities
@@ -152,21 +200,31 @@ namespace CheckpointBlock
                 return;
             }
 
-            Checkpoints[contentManager.level.ID] = EntityFlag.FlagPosition;
-
-            XmlWriter writer = null;
-            try
+            if (EntityFlag != null)
             {
-                writer = XmlWriter.Create(XmlFile, new XmlWriterSettings() { Indent = true });
-                var element = new XElement("levels",
-                        Checkpoints.Select(kv => new XElement($"id{kv.Key}", $"{kv.Value.X} {kv.Value.Y}")));
-                element.Save(writer);
+                Checkpoints[contentManager.level.ID] = EntityFlag.FlagPosition;
             }
-            finally
+            if (EntityFlag2 != null)
             {
-                writer?.Flush();
-                writer?.Close();
-                writer?.Dispose();
+                Checkpoints2[contentManager.level.ID] = EntityFlag2.FlagPosition;
+            }
+
+            var allKeys = new HashSet<ulong>(Checkpoints.Keys.Concat(Checkpoints2.Keys));
+            var doc = new XElement("levels",
+            allKeys.Select(key =>
+                new XElement("id" + key,
+                    Checkpoints.TryGetValue(key, out var value1) ? new XElement("_set1", value1.X + " " + value1.Y) : null,
+                    Checkpoints2.TryGetValue(key, out var value2) ? new XElement("_set2", value2.X + " " + value2.Y) : null
+                )
+            )
+        );
+
+            using (var fs = new FileStream(XmlFile,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None))
+            {
+                doc.Save(fs);
             }
         }
     }

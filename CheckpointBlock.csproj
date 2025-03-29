@@ -86,10 +86,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviours\BehaviourCheckpoint2.cs" />
     <Compile Include="Behaviours\BehaviourCheckpoint.cs" />
+    <Compile Include="Behaviours\BehaviourReset2.cs" />
     <Compile Include="Behaviours\BehaviourReset.cs" />
     <Compile Include="Blocks\BlockCheckpoint.cs" />
+    <Compile Include="Blocks\BlockCheckpoint2.cs" />
     <Compile Include="Blocks\BlockReset.cs" />
+    <Compile Include="Blocks\BlockReset2.cs" />
     <Compile Include="Entities\EntityFlag.cs" />
     <Compile Include="Factories\FactoryCheckpoint.cs" />
     <Compile Include="ModEntry.cs" />
