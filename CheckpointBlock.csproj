@@ -94,10 +94,14 @@
     <Compile Include="Blocks\BlockCheckpoint2.cs" />
     <Compile Include="Blocks\BlockReset.cs" />
     <Compile Include="Blocks\BlockReset2.cs" />
+    <Compile Include="Data\DataCheckpoint.cs" />
+    <Compile Include="Data\CheckpointSet.cs" />
     <Compile Include="Entities\EntityFlag.cs" />
     <Compile Include="Factories\FactoryCheckpoint.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Setups\SetupSet1.cs" />
+    <Compile Include="Setups\SetupSet2.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

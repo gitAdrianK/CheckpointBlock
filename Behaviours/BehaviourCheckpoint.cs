@@ -2,6 +2,7 @@ namespace CheckpointBlock.Behaviours
 {
     using System.Linq;
     using CheckpointBlock.Blocks;
+    using CheckpointBlock.Data;
     using CheckpointBlock.Entities;
     using JumpKing.API;
     using JumpKing.BodyCompBehaviours;
@@ -15,9 +16,14 @@ namespace CheckpointBlock.Behaviours
         public bool IsPlayerOnBlock { get; set; }
         private bool HasSet { get; set; }
 
+        private CheckpointSet Set { get; set; }
         private EntityFlag EntityFlag { get; set; }
 
-        public BehaviourCheckpoint(EntityFlag entityFlag) => this.EntityFlag = entityFlag;
+        public BehaviourCheckpoint(CheckpointSet set, EntityFlag entityFlag)
+        {
+            this.Set = set;
+            this.EntityFlag = entityFlag;
+        }
 
         public float ModifyXVelocity(float inputXVelocity, BehaviourContext behaviourContext) => inputXVelocity;
 
@@ -52,8 +58,9 @@ namespace CheckpointBlock.Behaviours
             this.HasSet = true;
 
             var rect = advCollisionInfo.GetCollidedBlocks<BlockCheckpoint>().First().GetRect();
-            ModEntry.CurrentPosition = new Point(rect.Left + (rect.Width / 2), rect.Bottom);
-            this.EntityFlag.FlagPosition = ModEntry.CurrentPosition;
+            var point = new Point(rect.Left + (rect.Width / 2), rect.Bottom);
+            this.Set.Current = point;
+            this.EntityFlag.FlagPosition = point;
 
             return true;
         }
