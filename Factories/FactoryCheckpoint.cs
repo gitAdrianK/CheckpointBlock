@@ -20,6 +20,8 @@ namespace CheckpointBlock.Factories
             BlockCheckpoint2.BLOCKCODE_CHECKPOINT_2,
             BlockReset.BLOCKCODE_RESET,
             BlockReset2.BLOCKCODE_RESET_2,
+            BlockCheckpointSingleUse.BLOCKCODE_CHECKPOINT_SINGLE_USE,
+            BlockCheckpointSingleUse2.BLOCKCODE_CHECKPOINT_SINGLE_USE_2,
         };
 
         public bool CanMakeBlock(Color blockCode, Level level) => SupportedBlockCodes.Contains(blockCode);
@@ -46,6 +48,12 @@ namespace CheckpointBlock.Factories
                 case var _ when blockCode == BlockReset2.BLOCKCODE_RESET_2:
                     LastUsedMapIdSet2 = level.ID;
                     return new BlockReset2(blockRect);
+                case var _ when blockCode == BlockCheckpointSingleUse.BLOCKCODE_CHECKPOINT_SINGLE_USE:
+                    LastUsedMapIdSet1 = level.ID;
+                    return new BlockCheckpointSingleUse(blockRect);
+                case var _ when blockCode == BlockCheckpointSingleUse2.BLOCKCODE_CHECKPOINT_SINGLE_USE_2:
+                    LastUsedMapIdSet2 = level.ID;
+                    return new BlockCheckpointSingleUse2(blockRect);
                 default:
                     throw new InvalidOperationException($"{nameof(FactoryCheckpoint)} is unable to create a block of Color code ({blockCode.R}, {blockCode.G}, {blockCode.B})");
             }

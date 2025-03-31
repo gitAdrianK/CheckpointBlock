@@ -1,28 +1,28 @@
 namespace CheckpointBlock.Behaviours
 {
+    using System.Linq;
     using CheckpointBlock.Blocks;
     using CheckpointBlock.Data;
-    using JumpKing;
+    using CheckpointBlock.Entities;
     using JumpKing.API;
     using JumpKing.BodyCompBehaviours;
     using JumpKing.Level;
     using Microsoft.Xna.Framework;
 
-    public class BehaviourReset2 : IBlockBehaviour
+    public class BehaviourCheckpointSingleUse : IBlockBehaviour
     {
         public float BlockPriority => 2.0f;
 
         public bool IsPlayerOnBlock { get; set; }
+        private bool HasSet { get; set; }
 
-        private ICollisionQuery CollisionQuery { get; set; }
         private CheckpointSet Set { get; set; }
-        private Point Start { get; }
+        private EntityFlag EntityFlag { get; set; }
 
-        public BehaviourReset2(ICollisionQuery collisionQuery, CheckpointSet set, Point start)
+        public BehaviourCheckpointSingleUse(CheckpointSet set, EntityFlag entityFlag)
         {
-            this.CollisionQuery = collisionQuery;
             this.Set = set;
-            this.Start = start;
+            this.EntityFlag = entityFlag;
         }
 
         public float ModifyXVelocity(float inputXVelocity, BehaviourContext behaviourContext) => inputXVelocity;
@@ -42,21 +42,32 @@ namespace CheckpointBlock.Behaviours
                 return true;
             }
 
-            var bodyComp = behaviourContext.BodyComp;
-            var hitbox = bodyComp.GetHitbox();
-            _ = this.CollisionQuery.CheckCollision(hitbox, out var _, out AdvCollisionInfo info);
-            this.IsPlayerOnBlock = info.IsCollidingWith<BlockReset2>();
+            var advCollisionInfo = behaviourContext.CollisionInfo.PreResolutionCollisionInfo;
+            this.IsPlayerOnBlock = advCollisionInfo.IsCollidingWith<BlockCheckpointSingleUse>();
 
-            if (!this.IsPlayerOnBlock
-                || (ModEntry.IgnoreStart && this.Start == this.Set.Current))
+            if (!this.IsPlayerOnBlock)
+            {
+                this.HasSet = false;
+                return true;
+            }
+
+            if (this.HasSet)
+            {
+                return true;
+            }
+            this.HasSet = true;
+
+            var rect = advCollisionInfo.GetCollidedBlocks<BlockCheckpointSingleUse>().First().GetRect();
+            var point = new Point(rect.Left + (rect.Width / 2), rect.Bottom);
+
+            if (this.Set.Used.Contains(point))
             {
                 return true;
             }
 
-            bodyComp.Position.X = this.Set.Current.X - (bodyComp.GetHitbox().Width / 2.0f);
-            bodyComp.Position.Y = this.Set.Current.Y - bodyComp.GetHitbox().Height;
-            bodyComp.Velocity = Vector2.Zero;
-            Camera.UpdateCamera(bodyComp.Position.ToPoint());
+            _ = this.Set.Used.Add(point);
+            this.Set.Current = point;
+            this.EntityFlag.FlagPosition = point;
 
             return true;
         }

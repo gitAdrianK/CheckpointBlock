@@ -86,12 +86,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviours\BehaviourCheckpointSingleUse.cs" />
+    <Compile Include="Behaviours\BehaviourCheckpointSingleUse2.cs" />
     <Compile Include="Behaviours\BehaviourCheckpoint2.cs" />
     <Compile Include="Behaviours\BehaviourCheckpoint.cs" />
     <Compile Include="Behaviours\BehaviourReset2.cs" />
     <Compile Include="Behaviours\BehaviourReset.cs" />
     <Compile Include="Blocks\BlockCheckpoint.cs" />
     <Compile Include="Blocks\BlockCheckpoint2.cs" />
+    <Compile Include="Blocks\BlockCheckpointSingleUse2.cs" />
+    <Compile Include="Blocks\BlockCheckpointSingleUse.cs" />
     <Compile Include="Blocks\BlockReset.cs" />
     <Compile Include="Blocks\BlockReset2.cs" />
     <Compile Include="Data\DataCheckpoint.cs" />

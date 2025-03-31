@@ -23,16 +23,7 @@ namespace CheckpointBlock
         /// Called by Jump King before the level loads
         /// </summary>
         [BeforeLevelLoad]
-        public static void BeforeLevelLoad()
-        {
-            //_ = Debugger.Launch();
-
-            _ = LevelManager.RegisterBlockFactory(new FactoryCheckpoint());
-
-            var contentManager = Game1.instance.contentManager;
-            SetupSet1.LoadTexture(contentManager);
-            SetupSet2.LoadTexture(contentManager);
-        }
+        public static void BeforeLevelLoad() => LevelManager.RegisterBlockFactory(new FactoryCheckpoint());
 
         /// <summary>
         /// Called by Jump King when the Level Starts
@@ -105,6 +96,7 @@ namespace CheckpointBlock
                 return;
             }
             Data.SaveToFile();
+            Data = null;
         }
     }
 }

@@ -14,11 +14,13 @@ namespace CheckpointBlock.Behaviours
 
         public bool IsPlayerOnBlock { get; set; }
 
+        private ICollisionQuery CollisionQuery { get; set; }
         private CheckpointSet Set { get; set; }
         private Point Start { get; }
 
-        public BehaviourReset(CheckpointSet set, Point start)
+        public BehaviourReset(ICollisionQuery collisionQuery, CheckpointSet set, Point start)
         {
+            this.CollisionQuery = collisionQuery;
             this.Set = set;
             this.Start = start;
         }
@@ -40,8 +42,10 @@ namespace CheckpointBlock.Behaviours
                 return true;
             }
 
-            var advCollisionInfo = behaviourContext.CollisionInfo.PreResolutionCollisionInfo;
-            this.IsPlayerOnBlock = advCollisionInfo.IsCollidingWith<BlockReset>();
+            var bodyComp = behaviourContext.BodyComp;
+            var hitbox = bodyComp.GetHitbox();
+            _ = this.CollisionQuery.CheckCollision(hitbox, out var _, out AdvCollisionInfo info);
+            this.IsPlayerOnBlock = info.IsCollidingWith<BlockReset>();
 
             if (!this.IsPlayerOnBlock
                 || (ModEntry.IgnoreStart && this.Start == this.Set.Current))
@@ -49,7 +53,6 @@ namespace CheckpointBlock.Behaviours
                 return true;
             }
 
-            var bodyComp = behaviourContext.BodyComp;
             bodyComp.Position.X = this.Set.Current.X - (bodyComp.GetHitbox().Width / 2.0f);
             bodyComp.Position.Y = this.Set.Current.Y - bodyComp.GetHitbox().Height;
             bodyComp.Velocity = Vector2.Zero;

@@ -43,6 +43,8 @@ namespace CheckpointBlock.Behaviours
             }
 
             var advCollisionInfo = behaviourContext.CollisionInfo.PreResolutionCollisionInfo;
+            // I could Harmony Traverse the AdvCollisionInfo typeBlockLookup and clean up the
+            // double behaviours, I'll do it when it becomes needed.
             this.IsPlayerOnBlock = advCollisionInfo.IsCollidingWith<BlockCheckpoint>();
 
             if (!this.IsPlayerOnBlock)

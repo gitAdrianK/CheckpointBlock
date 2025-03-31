@@ -8,6 +8,7 @@ namespace CheckpointBlock.Setups
     using CheckpointBlock.Entities;
     using CheckpointBlock.Factories;
     using JumpKing;
+    using JumpKing.Level;
     using JumpKing.Player;
     using JumpKing.Workshop;
     using Microsoft.Xna.Framework;
@@ -15,13 +16,7 @@ namespace CheckpointBlock.Setups
 
     public static class SetupSet1
     {
-        private static Texture2D CheckpointTexture { get; set; }
-
         private static EntityFlag EntityFlag { get; set; }
-
-        public static void LoadTexture(JKContentManager contentManager)
-            => CheckpointTexture = contentManager.Load<Texture2D>(
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "checkpoint"));
 
         public static void Setup(
             JKContentManager contentManager,
@@ -30,7 +25,7 @@ namespace CheckpointBlock.Setups
             DataCheckpoint data,
             Point start)
         {
-            if (level.ID == FactoryCheckpoint.LastUsedMapIdSet1)
+            if (level.ID != FactoryCheckpoint.LastUsedMapIdSet1)
             {
                 return;
             }
@@ -43,14 +38,20 @@ namespace CheckpointBlock.Setups
             }
             else
             {
-                checkpointTexture = CheckpointTexture;
+                checkpointTexture = contentManager.Load<Texture2D>(
+                    Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "checkpoint"));
             }
 
-            EntityFlag = new EntityFlag(checkpointTexture, start);
+            EntityFlag = new EntityFlag(checkpointTexture, start)
+            {
+                FlagPosition = data.Set1.Current
+            };
             _ = player.m_body.RegisterBlockBehaviour(
-                typeof(BlockReset), new BehaviourReset(data.Set1, start));
+                typeof(BlockReset), new BehaviourReset(LevelManager.Instance, data.Set1, start));
             _ = player.m_body.RegisterBlockBehaviour(
                 typeof(BlockCheckpoint), new BehaviourCheckpoint(data.Set1, EntityFlag));
+            _ = player.m_body.RegisterBlockBehaviour(
+                typeof(BlockCheckpointSingleUse), new BehaviourCheckpointSingleUse(data.Set1, EntityFlag));
         }
     }
 }
